@@ -10,7 +10,6 @@ import (
 	"math/big"
 	"strings"
 
-	"github.com/GinMu/swtc-base-lib-go/constant"
 	"github.com/GinMu/swtc-base-lib-go/utils"
 	"github.com/mr-tron/base58"
 
@@ -52,10 +51,10 @@ func derivePrivateKey(seed []byte) *big.Int {
 	return addMod(pb, privateGen, ec.N)
 }
 
-// DeriveKeyPair derive keypair by secret
-func (*Secp256KeyPair) DeriveKeyPair(secret string) (*PrivateKey, error) {
-	decodedBytes, err := base58.DecodeAlphabet(secret, constant.SWTCAlphabet)
-	if err != nil || decodedBytes[0] != constant.SWTCSeedfix || len(decodedBytes) < 5 {
+// DeriveKeyPair derive keypair by secret with alphabet and seedfix
+func (*Secp256KeyPair) DeriveKeyPair(secret string, alphabet *base58.Alphabet, seedfix uint8) (*PrivateKey, error) {
+	decodedBytes, err := base58.DecodeAlphabet(secret, alphabet)
+	if err != nil || decodedBytes[0] != seedfix || len(decodedBytes) < 5 {
 		err = fmt.Errorf("invalid input size")
 		return nil, err
 	}
@@ -68,19 +67,19 @@ func (*Secp256KeyPair) DeriveKeyPair(secret string) (*PrivateKey, error) {
 	return &priv, nil
 }
 
-// GenerateSeed generate secret
-func (*Secp256KeyPair) GenerateSeed() (string, error) {
+// GenerateSeed generate secret with alphabet & seedfix
+func (*Secp256KeyPair) GenerateSeed(alphabet *base58.Alphabet, seedfix uint8) (string, error) {
 	seedBytes := make([]byte, 16)
 	_, err := io.ReadFull(rand.Reader, seedBytes)
 	if err != nil {
 		return "", err
 	}
-	return utils.EncodeBase58(constant.SWTCSeedfix, seedBytes), nil
+	return utils.EncodeBase58(alphabet, seedfix, seedBytes), nil
 }
 
-// CheckAddress validate address is valid or not
-func (*Secp256KeyPair) CheckAddress(address string) bool {
-	_, err := utils.DecodeBase58(constant.SWTCAccountPrefix, address)
+// CheckAddress validate address is valid or not with alphabet & account prefix
+func (*Secp256KeyPair) CheckAddress(address string, alphabet *base58.Alphabet, accountPrefix uint8) bool {
+	_, err := utils.DecodeBase58(alphabet, accountPrefix, address)
 
 	if err != nil {
 		return false
@@ -117,8 +116,8 @@ func (pub *PublicKey) BytesToHex() string {
 	return strings.ToUpper(hex.EncodeToString(pub.ToBytes()))
 }
 
-// ToAddress convert public key to address
-func (pub *PublicKey) ToAddress() (address string) {
+// ToAddress convert public key to address with alphabet & account prefix
+func (pub *PublicKey) ToAddress(alphabet *base58.Alphabet, accountPrefix uint8) (address string) {
 	pubBytes := pub.ToBytes()
 
 	/* SHA256 Hash */
@@ -132,7 +131,7 @@ func (pub *PublicKey) ToAddress() (address string) {
 	ripemd160H.Reset()
 	ripemd160H.Write(pubHash1)
 	pubHash2 := ripemd160H.Sum(nil)
-	address = utils.EncodeBase58(constant.SWTCAccountPrefix, pubHash2)
+	address = utils.EncodeBase58(alphabet, accountPrefix, pubHash2)
 
 	return address
 }

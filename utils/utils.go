@@ -3,7 +3,6 @@ package utils
 import (
 	"errors"
 
-	"github.com/GinMu/swtc-base-lib-go/constant"
 	"github.com/mr-tron/base58"
 )
 
@@ -22,17 +21,17 @@ func bufCat1(buf1 []byte, buf2 []byte) []byte {
 }
 
 // EncodeBase58 encode bytes to string
-func EncodeBase58(version uint8, bytes []byte) string {
+func EncodeBase58(alphabet *base58.Alphabet, version uint8, bytes []byte) string {
 	buffer := bufCat0(version, bytes)
 	checksum := Sha256Util(Sha256Util(buffer))[0:4]
 	ret := bufCat1(buffer, checksum)
-	encodedString := base58.EncodeAlphabet(ret, constant.SWTCAlphabet)
+	encodedString := base58.EncodeAlphabet(ret, alphabet)
 	return encodedString
 }
 
 // DecodeBase58 decode string to bytes
-func DecodeBase58(version uint8, input string) (decodedBytes []byte, err error) {
-	decodedBytes, err = base58.DecodeAlphabet(input, constant.SWTCAlphabet)
+func DecodeBase58(alphabet *base58.Alphabet, version uint8, input string) (decodedBytes []byte, err error) {
+	decodedBytes, err = base58.DecodeAlphabet(input, alphabet)
 	if err != nil || decodedBytes[0] != version || len(decodedBytes) < 5 {
 		err = errors.New("invalid input size")
 		return
@@ -54,8 +53,8 @@ func DecodeBase58(version uint8, input string) (decodedBytes []byte, err error) 
 }
 
 // DecodeAddress convert address to bytes
-func DecodeAddress(address string) ([]byte, error) {
-	decodedBytes, err := DecodeBase58(constant.SWTCAccountPrefix, address)
+func DecodeAddress(address string, alphabet *base58.Alphabet, version uint8) ([]byte, error) {
+	decodedBytes, err := DecodeBase58(alphabet, version, address)
 	if err != nil {
 		return nil, err
 	}
