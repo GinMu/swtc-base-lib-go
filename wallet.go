@@ -9,6 +9,13 @@ import (
 	"github.com/mr-tron/base58"
 )
 
+// SWTCAlphabet definition
+var SWTCAlphabet *base58.Alphabet
+
+func init() {
+	SWTCAlphabet = base58.NewAlphabet("jpshnaf39wBUDNEGHJKLM4PQRST7VWXYZ2bcdeCg65rkm8oFqi1tuvAxyz")
+}
+
 // Wallet strcut
 type Wallet struct {
 	priv          *secp256k1.PrivateKey
@@ -19,7 +26,7 @@ type Wallet struct {
 
 // IsValidAddress validate swtc address is valid or not
 func IsValidAddress(address string) bool {
-	return IsValidConsortiumAddress(address, constant.SWTCAlphabet, constant.SWTCAccountPrefix)
+	return IsValidConsortiumAddress(address, SWTCAlphabet, constant.SWTCAccountPrefix)
 }
 
 // IsValidConsortiumAddress validate consortium chain address is valid or not
@@ -37,7 +44,7 @@ func IsValidConsortiumAddress(address string, alphabet *base58.Alphabet, account
 
 // IsValidSecret validate swtc secret is valid or not
 func IsValidSecret(secret string) bool {
-	return IsValidConsortiumSecret(secret, constant.SWTCAlphabet, constant.SWTCSeedfix)
+	return IsValidConsortiumSecret(secret, SWTCAlphabet, constant.SWTCSeedfix)
 }
 
 // IsValidConsortiumSecret validate consortium chain secret is valid or not
@@ -57,13 +64,7 @@ func IsValidConsortiumSecret(secret string, alphabet *base58.Alphabet, seedfix u
 
 // Generate swtc wallet
 func Generate() (*Wallet, error) {
-	keyPair := &secp256k1.Secp256KeyPair{}
-	secret, err := keyPair.GenerateSeed(constant.SWTCAlphabet, constant.SWTCSeedfix)
-	if err != nil {
-		return nil, err
-	}
-
-	return FromSecret(secret)
+	return GenerateConsortium(SWTCAlphabet, constant.SWTCSeedfix, constant.SWTCAccountPrefix)
 }
 
 // GenerateConsortium to generate consortium chain wallet
@@ -79,7 +80,7 @@ func GenerateConsortium(alphabet *base58.Alphabet, seedfix uint8, accountPrefix 
 
 // FromSecret generate swtc wallet by secret
 func FromSecret(secret string) (*Wallet, error) {
-	return FromConsortiumSecret(secret, constant.SWTCAlphabet, constant.SWTCSeedfix, constant.SWTCAccountPrefix)
+	return FromConsortiumSecret(secret, SWTCAlphabet, constant.SWTCSeedfix, constant.SWTCAccountPrefix)
 }
 
 // FromConsortiumSecret generate consortium chain wallet by secret
